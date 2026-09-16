@@ -46,7 +46,7 @@ git_diff</pre>
   "arguments": { "query": "TODO" }
 }</pre>
     <div class="quote">The model does not execute the tool. The application executes the tool.</div>
-    <a class="example-link" href="../examples/02-tool-calling/README.md">Open examples/02-tool-calling &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/02-tool-calling/README.md">Open examples/02-tool-calling &rarr;</a>
   </div>
 
   <!-- 05 · EXECUTION BOUNDARY -->
@@ -75,7 +75,7 @@ git_diff</pre>
     return response
   }
 }</pre>
-    <a class="example-link" href="../examples/03-agent-loop/README.md">Open examples/03-agent-loop &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/03-agent-loop/README.md">Open examples/03-agent-loop &rarr;</a>
   </div>
 
   <!-- 07 · STATE AND CONTEXT -->
@@ -88,7 +88,7 @@ git_diff</pre>
 AgentState -&gt; never sent, free</pre>
     <p class="note">Tool output past a size limit gets truncated before it
       ever reaches the model.</p>
-    <a class="example-link" href="../examples/04-state/README.md">Open examples/04-state &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/04-state/README.md">Open examples/04-state &rarr;</a>
   </div>
 
   <!-- 08 · TOOL DESIGN -->
@@ -102,7 +102,7 @@ AgentState -&gt; never sent, free</pre>
 readFile(path)
 listFiles(path?)
 runTests(test?)</pre>
-    <a class="example-link" href="../examples/05-tool-design/README.md">Open examples/05-tool-design &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/05-tool-design/README.md">Open examples/05-tool-design &rarr;</a>
   </div>
 
   <!-- 09 · WORKFLOW VS AGENT -->
@@ -142,7 +142,7 @@ MCP Server
  |- read_file
  `- run_tests</pre>
     <div class="quote">A protocol decouples the agent runtime from the tool implementation.</div>
-    <a class="example-link" href="../examples/06-mcp/README.md">Open examples/06-mcp &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/06-mcp/README.md">Open examples/06-mcp &rarr;</a>
   </div>
 
   <!-- 12 · MCP ARCHITECTURE -->
@@ -168,7 +168,7 @@ MCP Server
 })</pre>
     <p>A real, independent agent loop, fresh context, only the tools its
       task needs. The parent never sees its intermediate tool calls.</p>
-    <a class="example-link" href="../examples/07-sub-agent/README.md">Open examples/07-sub-agent &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/07-sub-agent/README.md">Open examples/07-sub-agent &rarr;</a>
   </div>
 
   <!-- 14 · MULTI-AGENT PATTERNS -->
@@ -182,7 +182,7 @@ MCP Server
                    Writer                                 |
                      |                                 Generator
                   Reviewer</pre>
-    <a class="example-link" href="../examples/08-multi-agent/README.md">Open examples/08-multi-agent &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/08-multi-agent/README.md">Open examples/08-multi-agent &rarr;</a>
   </div>
 
   <!-- 15 · WHEN NOT TO -->
@@ -226,7 +226,7 @@ untrusted README
     <div class="chips">
       <span class="chip blocked">delete_data &rarr; blocked</span>
     </div>
-    <a class="example-link" href="../examples/09-security/README.md">Open examples/09-security &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/09-security/README.md">Open examples/09-security &rarr;</a>
   </div>
 
   <!-- 18 · RELIABILITY -->
@@ -238,7 +238,7 @@ untrusted README
   -&gt; agent retries or tries a different tool</pre>
     <p>Timeouts, retries, structured errors, bounded iterations, failure
       modes an agent hits constantly that normal applications rarely do.</p>
-    <a class="example-link" href="../examples/10-reliability/README.md">Open examples/10-reliability &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/10-reliability/README.md">Open examples/10-reliability &rarr;</a>
   </div>
 
   <!-- 19 · OBSERVABILITY -->
@@ -252,7 +252,7 @@ untrusted README
  `- Final Response</pre>
     <p>Structured console/JSON tracing, enough to answer "why did the
       agent do that" after the fact.</p>
-    <a class="example-link" href="../examples/11-observability/README.md">Open examples/11-observability &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/11-observability/README.md">Open examples/11-observability &rarr;</a>
   </div>
 
   <!-- 20 · EVALUATION -->
@@ -265,7 +265,7 @@ untrusted README
   "task": "Find the failing authentication test",
   "expectedTools": ["search_code", "read_file", "run_tests"]
 }</pre>
-    <a class="example-link" href="../examples/12-evaluation/README.md">Open examples/12-evaluation &rarr;</a>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/12-evaluation/README.md">Open examples/12-evaluation &rarr;</a>
   </div>
 
   <!-- 21 · PRODUCTION ARCHITECTURE -->
@@ -286,7 +286,7 @@ untrusted README
              MCP   APIs   DB
 
         + Observability + Evaluation + Security</pre>
-    <a class="example-link" href="../docs/architecture.md">Open docs/architecture.md &rarr;</a>
+    <a class="example-link" href="docs/architecture.md">Open docs/architecture.md &rarr;</a>
   </div>
 
   <!-- 22 · FINAL MENTAL MODEL -->
