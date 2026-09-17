@@ -13,31 +13,98 @@
   <div class="slide center active">
     <div class="kicker">AI Agents Engineering Workshop</div>
     <h1>Build a runtime,<br>not a <span class="accent">prompt.</span></h1>
-    <p style="margin-top: 1.5rem;">A hands-on, build-first workshop on AI agent architecture.</p>
+    <p style="margin-top: 1.5rem;">How Claude Code, Codex, opencode and pi actually work &mdash;
+      by building one.</p>
   </div>
 
-  <!-- 02 · WHAT WE'RE BUILDING -->
+  <!-- 02 · AGENDA -->
+  <div class="slide">
+    <div class="kicker">Six sessions</div>
+    <h2>Where we're going</h2>
+    <ul class="agenda">
+      <li><span class="num">1</span><span><span class="title">Foundations</span><span class="desc">Provider, system prompt, tool calling</span></span></li>
+      <li><span class="num">2</span><span><span class="title">The loop</span><span class="desc">Iteration, retries, state, what it costs</span></span></li>
+      <li><span class="num">3</span><span><span class="title">Tools &amp; writing</span><span class="desc">Tool design, and the hardest tool of all</span></span></li>
+      <li><span class="num">4</span><span><span class="title">Context</span><span class="desc">Compaction, memory, session persistence</span></span></li>
+      <li><span class="num">5</span><span><span class="title">Protocols</span><span class="desc">MCP, sub-agents, delegation</span></span></li>
+      <li><span class="num">6</span><span><span class="title">Survivability</span><span class="desc">Injection, policy, tracing, evaluation</span></span></li>
+    </ul>
+  </div>
+
+  <!-- 03 · TWO TRACKS -->
   <div class="slide">
     <div class="kicker">What we're actually building</div>
-    <h2>An Engineering Agent</h2>
-    <pre>search_code
-read_file
-list_files
-run_tests
-git_diff</pre>
-    <p style="margin-top: 1.5rem;">One system, built progressively across 12 examples, investigating a
-      bundled sample project with a deliberately failing test.</p>
+    <h2>Two harnesses,<br>in parallel</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">In session &middot; Engineering Agent</div><div class="layer-desc">Investigates and fixes a bundled Pokédex API with a real failing test. 14 examples.</div></div>
+      <div class="layer"><div class="layer-label">Homework &middot; Wiki Harness</div><div class="layer-desc">Yours. 162 pages of the QuestionPro help centre, offline. One stage per week.</div></div>
+    </div>
+    <p class="note">You only ever edit <code>harness/</code>. Upstream never touches it,
+      so <code>git pull upstream main</code> never conflicts.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/harness/README.md">Open harness/README.md &rarr;</a>
   </div>
 
-  <!-- 03 · MENTAL MODEL -->
+  <!-- 04 · MENTAL MODEL -->
   <div class="slide center">
     <div class="kicker">Mental model</div>
     <h1>Agent &ne; LLM + prompt</h1>
-    <div class="quote">An AI agent is a runtime that allows an LLM to operate
+    <div class="quote">An agent is a runtime that lets a model operate
       in an environment through controlled actions.</div>
   </div>
 
-  <!-- 04 · TOOL CALLING -->
+  <!-- ============ SESSION 1 ============ -->
+  <div class="slide center">
+    <div class="kicker">Session 1</div>
+    <h1>Provider, prompt,<br><span class="accent">tool calling</span></h1>
+  </div>
+
+  <!-- 06 · THE HOOK -->
+  <div class="slide center">
+    <div class="kicker">You just learned RAG</div>
+    <h1>Claude Code has no<br><span class="accent">vector database.</span></h1>
+    <p style="margin-top: 1.5rem;">Neither does Codex, opencode, or pi. They grep.</p>
+  </div>
+
+  <!-- 07 · WHY -->
+  <div class="slide">
+    <div class="kicker">Retrieval, two ways</div>
+    <h2>Why grep wins here</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">An index goes stale</div><div class="layer-desc">Code changes every commit. Grep always reads the current world.</div></div>
+      <div class="layer"><div class="layer-label">Code is exact</div><div class="layer-desc">You want the file containing <code>getPokemonByName</code>, not the one nearest it in embedding space.</div></div>
+      <div class="layer"><div class="layer-label">Top-k guesses too early</div><div class="layer-desc">It decides how much context is relevant before anyone knows the problem.</div></div>
+    </div>
+    <div class="quote">Agentic search is RAG where the model gets to iterate.</div>
+  </div>
+
+  <!-- 08 · PROVIDER -->
+  <div class="slide">
+    <div class="kicker">Example 01</div>
+    <h2>The provider</h2>
+    <pre>interface LLMProvider {
+  chat(request): Promise&lt;ChatResponse&gt;
+}</pre>
+    <p>One interface for Gemini, OpenAI, Groq, a local model. The workshop
+      doesn't care which vendor you picked this morning.</p>
+    <div class="quote">The API is stateless. Every call ships the entire history.
+      "Memory" is always something the client does.</div>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/01-basic-llm/README.md">Open examples/01-basic-llm &rarr;</a>
+  </div>
+
+  <!-- 09 · SYSTEM PROMPT -->
+  <div class="slide">
+    <div class="kicker">The underrated part</div>
+    <h2>The system prompt<br>is the product</h2>
+    <p>In a real harness it isn't a sentence, it's thousands of tokens. The
+      workflow, the refusals, when to use which tool &mdash; that's prompt, not code.</p>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Priority</div><div class="layer-desc">Models treat it as highest-priority. A tendency, not a guarantee &mdash; session 6 shows where it gives out.</div></div>
+      <div class="layer"><div class="layer-label">Tool descriptions count</div><div class="layer-desc">Read by the model on every call. Prompt engineering wearing a JSON hat.</div></div>
+      <div class="layer"><div class="layer-label">It costs, repeatedly</div><div class="layer-desc">Re-sent on every turn of the loop. A 20-turn run pays for it 20 times.</div></div>
+    </div>
+  </div>
+
+  <!-- 10 · TOOL CALLING -->
   <div class="slide">
     <div class="kicker">Example 02</div>
     <h2>Tool calling</h2>
@@ -49,7 +116,7 @@ git_diff</pre>
     <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/02-tool-calling/README.md">Open examples/02-tool-calling &rarr;</a>
   </div>
 
-  <!-- 05 · EXECUTION BOUNDARY -->
+  <!-- 11 · EXECUTION BOUNDARY -->
   <div class="slide">
     <div class="kicker">The execution boundary</div>
     <h2>Model requests.<br>Application decides.</h2>
@@ -59,9 +126,27 @@ git_diff</pre>
       <div class="layer"><div class="layer-label">Tool</div><div class="layer-desc">Runs. Returns a result.</div></div>
       <div class="layer"><div class="layer-label">Model</div><div class="layer-desc">Receives the result, decides what's next.</div></div>
     </div>
+    <p class="note">Every security property in session 6 rests on this one fact.</p>
   </div>
 
-  <!-- 06 · AGENT LOOP -->
+  <!-- 12 · HOMEWORK 1 -->
+  <div class="slide">
+    <div class="kicker">Homework &middot; week 1</div>
+    <h2>One tool call,<br>end to end</h2>
+    <pre>pnpm verify   # structure, offline and free
+pnpm golden   # score: 10 fixed questions</pre>
+    <p>You'll score about 2/10. That's the baseline you beat for six weeks.</p>
+    <div class="quote">Your homework will fail with a 429. That's not your bug.
+      Don't fix it &mdash; bring it Monday.</div>
+  </div>
+
+  <!-- ============ SESSION 2 ============ -->
+  <div class="slide center">
+    <div class="kicker">Session 2</div>
+    <h1>The loop, retries,<br><span class="accent">and the bill</span></h1>
+  </div>
+
+  <!-- 14 · AGENT LOOP -->
   <div class="slide">
     <div class="kicker">Example 03</div>
     <h2>The agent loop</h2>
@@ -75,23 +160,67 @@ git_diff</pre>
     return response
   }
 }</pre>
+    <p class="note">Everything else in six sessions is a refinement of this.</p>
     <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/03-agent-loop/README.md">Open examples/03-agent-loop &rarr;</a>
   </div>
 
-  <!-- 07 · STATE AND CONTEXT -->
+  <!-- 15 · SAFEGUARDS -->
+  <div class="slide">
+    <div class="kicker">Two safeguards, two failures</div>
+    <h2>Bounding the loop</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">MAX_ITERATIONS</div><div class="layer-desc">A model that never stops asking for tools, until your budget is gone.</div></div>
+      <div class="layer"><div class="layer-label">TOOL_TIMEOUT_MS</div><div class="layer-desc">One hung tool call stalling the whole run, with no output at all.</div></div>
+    </div>
+    <p class="note">Hitting the cap is information: the task was too big, the
+      tools too weak, or the prompt too vague.</p>
+  </div>
+
+  <!-- 16 · TWO RETRIES -->
+  <div class="slide">
+    <div class="kicker">The 429 you all hit</div>
+    <h2>Two kinds of retry</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Transport &middot; provider.ts</div><div class="layer-desc">429, 5xx, timeout. The harness decides. Backoff, Retry-After, jitter. <strong>The model never sees it.</strong></div></div>
+      <div class="layer"><div class="layer-label">Semantic &middot; the loop</div><div class="layer-desc">A tool returned <code>{ ok: false }</code>. The model decides, and changes strategy. Session 6.</div></div>
+    </div>
+    <p class="note">A rate limit carries nothing the model can act on. A failed
+      tool carries exactly what it needs. Different layers, on purpose.</p>
+  </div>
+
+  <!-- 17 · STATE -->
   <div class="slide">
     <div class="kicker">Example 04</div>
-    <h2>Context and state</h2>
-    <p>Conversation history costs tokens on every call. Agent state doesn't,
-      it never reaches the model.</p>
-    <pre>messages   -&gt; sent to the model, every call
+    <h2>History vs. state</h2>
+    <pre>messages   -&gt; sent to the model, every call, always paid for
 AgentState -&gt; never sent, free</pre>
-    <p class="note">Tool output past a size limit gets truncated before it
-      ever reaches the model.</p>
+    <p>Read a 50,000-token file and it's in your context on every subsequent
+      call for the rest of the run.</p>
+    <p class="note">Example 04 truncates tool output. That's the blunt
+      instrument &mdash; session 4 replaces it.</p>
     <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/04-state/README.md">Open examples/04-state &rarr;</a>
   </div>
 
-  <!-- 08 · TOOL DESIGN -->
+  <!-- 18 · COST -->
+  <div class="slide">
+    <div class="kicker">What it costs</div>
+    <h2>Append-only,<br>for a reason</h2>
+    <p>A 12-turn run re-sends the whole history 12 times. Cost is closer to
+      quadratic in turns than linear.</p>
+    <p style="margin-top: 1rem;">Prompt caching is the mitigation: providers cache the
+      <em>prefix</em> and charge a fraction to re-send it. Anthropic marks
+      breakpoints explicitly, Gemini caches implicitly.</p>
+    <div class="quote">Edit an earlier message and you invalidate the cache from
+      there on. That's why compaction is a rare, deliberate event.</div>
+  </div>
+
+  <!-- ============ SESSION 3 ============ -->
+  <div class="slide center">
+    <div class="kicker">Session 3</div>
+    <h1>Tool design, and<br><span class="accent">the write tool</span></h1>
+  </div>
+
+  <!-- 20 · TOOL DESIGN -->
   <div class="slide">
     <div class="kicker">Example 05</div>
     <h2>Tool design</h2>
@@ -102,19 +231,107 @@ AgentState -&gt; never sent, free</pre>
 readFile(path)
 listFiles(path?)
 runTests(test?)</pre>
+    <p class="note">You can't write a policy for <code>executeAnything</code>.
+      A policy needs to know what a tool does, and it does anything.</p>
     <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/05-tool-design/README.md">Open examples/05-tool-design &rarr;</a>
   </div>
 
-  <!-- 09 · WORKFLOW VS AGENT -->
-  <div class="slide center">
-    <div class="kicker">A choice, not a default</div>
-    <h1>Workflow vs. <span class="accent">agent</span></h1>
-    <p style="margin-top: 1.5rem;">A deterministic workflow has a fixed sequence of steps. An agent
-      decides its own sequence of tool calls. Use the simplest one that
-      solves the task, an agent is not automatically the right answer.</p>
+  <!-- 21 · NAIVE WRITE -->
+  <div class="slide">
+    <div class="kicker">Example 06 &middot; the one everyone builds first</div>
+    <h2>write_file(path, content)</h2>
+    <pre>pnpm 06:naive
+git diff examples/06-write-tool/src/fixture</pre>
+    <p>The model regenerates the whole file from memory. Whatever it didn't
+      remember is gone. The tool returned <code>ok</code>, so nothing warned you.</p>
+    <div class="quote">No diff means no review. No review means nobody notices
+      until much later.</div>
   </div>
 
-  <!-- 10 · PROTOCOLS PROBLEM -->
+  <!-- 22 · EDIT TOOL -->
+  <div class="slide">
+    <div class="kicker">Example 06 &middot; the real one</div>
+    <h2>edit_file &mdash; four rules</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Read before write</div><div class="layer-desc">Editing an unread file is editing a remembered file.</div></div>
+      <div class="layer"><div class="layer-label">Exactly one match</div><div class="layer-desc">Zero and many are <em>different</em> errors with different fixes.</div></div>
+      <div class="layer"><div class="layer-label">Failed match is an error</div><div class="layer-desc">Never a silent no-op. The worst case is the agent reasoning on from a fix that never landed.</div></div>
+      <div class="layer"><div class="layer-label">Return a diff</div><div class="layer-desc">A human must be able to review it without opening the file.</div></div>
+    </div>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/06-write-tool/README.md">Open examples/06-write-tool &rarr;</a>
+  </div>
+
+  <!-- 23 · PROMPT VS CODE -->
+  <div class="slide center">
+    <div class="kicker">The takeaway of session 3</div>
+    <h1>Prompts shape tendencies.<br><span class="accent">Code sets limits.</span></h1>
+    <p style="margin-top: 1.5rem;">The prompt asks the model to read before editing.
+      The runtime <em>refuses</em> if it hasn't. Those are not the same thing.</p>
+  </div>
+
+  <!-- ============ SESSION 4 ============ -->
+  <div class="slide center">
+    <div class="kicker">Session 4</div>
+    <h1>Context<br><span class="accent">engineering</span></h1>
+  </div>
+
+  <!-- 25 · COMPACTION -->
+  <div class="slide">
+    <div class="kicker">Example 07</div>
+    <h2>Compaction</h2>
+    <pre>[system] [task] [..... summarised .....] [recent turns verbatim]</pre>
+    <div class="box">
+      <div class="layer"><div class="layer-label">System + task stay verbatim</div><div class="layer-desc">Lose the task and the agent forgets what it was doing.</div></div>
+      <div class="layer"><div class="layer-label">Recent turns stay verbatim</div><div class="layer-desc">That's where the live work is.</div></div>
+      <div class="layer"><div class="layer-label">The middle gets summarised</div><div class="layer-desc">That's where the bulk and the redundancy are.</div></div>
+    </div>
+    <div class="quote">Truncation deletes. Compaction remembers, in less space.</div>
+  </div>
+
+  <!-- 26 · THE BUG -->
+  <div class="slide">
+    <div class="kicker">The bug everyone hits once</div>
+    <h2>Orphaned tool results</h2>
+    <pre>assistant: tool_call  id=abc   &lt;- cut by compaction
+tool:      result     id=abc   &lt;- now an orphan
+                               -&gt; provider rejects the whole request</pre>
+    <p>Cut the middle out and you can strand a tool result whose call is gone.
+      Most providers reject the entire request.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/07-context/README.md">Open examples/07-context &rarr;</a>
+  </div>
+
+  <!-- 27 · MEMORY -->
+  <div class="slide">
+    <div class="kicker">Demystified</div>
+    <h2>Memory is a file</h2>
+    <pre>AGENTS.md  -&gt;  read at startup  -&gt;  pasted into the system prompt</pre>
+    <p><code>CLAUDE.md</code>, <code>AGENTS.md</code>, pi's memory &mdash; all the same
+      mechanism. No vector store. No retrieval step.</p>
+    <div class="box">
+      <div class="layer"><div class="layer-label">It costs tokens on every call</div><div class="layer-desc">It's in the system prompt. Long memory files are a recurring bill.</div></div>
+      <div class="layer"><div class="layer-label">It is never filtered</div><div class="layer-desc">Everything in it is always present, relevant or not.</div></div>
+    </div>
+  </div>
+
+  <!-- 28 · SESSIONS -->
+  <div class="slide">
+    <div class="kicker">Persistence</div>
+    <h2>Save every turn,<br>not at the end</h2>
+    <pre>.session/transcript.jsonl   # one message per line, appended live
+
+pnpm 07          # Ctrl-C partway through
+pnpm 07:resume   # picks up mid-task</pre>
+    <div class="quote">A session you can only resume after a clean exit is a
+      session you cannot resume. Crashing is exactly when you want it.</div>
+  </div>
+
+  <!-- ============ SESSION 5 ============ -->
+  <div class="slide center">
+    <div class="kicker">Session 5</div>
+    <h1>Protocols and<br><span class="accent">delegation</span></h1>
+  </div>
+
+  <!-- 30 · PROTOCOL PROBLEM -->
   <div class="slide">
     <div class="kicker">The problem</div>
     <h2>Protocols</h2>
@@ -125,55 +342,51 @@ Agent
  |- custom Slack integration
  |- custom filesystem integration
  `- custom database integration</pre>
+    <p>Write one client, and every server anyone has already built works
+      with you.</p>
   </div>
 
-  <!-- 11 · MCP -->
+  <!-- 31 · CLIENT FIRST -->
   <div class="slide">
-    <div class="kicker">Example 06</div>
-    <h2>MCP</h2>
-    <pre>Agent
-  |
-  v
-MCP Client
-  |
-  v
-MCP Server
- |- search_code
- |- read_file
- `- run_tests</pre>
-    <div class="quote">A protocol decouples the agent runtime from the tool implementation.</div>
-    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/06-mcp/README.md">Open examples/06-mcp &rarr;</a>
+    <div class="kicker">Example 08</div>
+    <h2>You are the client</h2>
+    <pre>pnpm 08   # spawns Anthropic's published filesystem server over npx</pre>
+    <p>Same <code>discoverTools()</code>, same <code>runAgent()</code>. Zero lines of
+      the agent loop changed to talk to a server we've never seen.</p>
+    <div class="quote">Building a harness means consuming servers far more often
+      than writing them.</div>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/08-mcp/README.md">Open examples/08-mcp &rarr;</a>
   </div>
 
-  <!-- 12 · MCP ARCHITECTURE -->
+  <!-- 32 · TRANSPORTS -->
   <div class="slide">
     <div class="kicker">MCP architecture</div>
     <h2>Two transports,<br>same server</h2>
     <div class="box">
-      <div class="layer"><div class="layer-label">stdio</div><div class="layer-desc">Client spawns the server as a child process, no networking.</div></div>
-      <div class="layer"><div class="layer-label">HTTP</div><div class="layer-desc">Server runs standalone on a port, client connects remotely.</div></div>
+      <div class="layer"><div class="layer-label">stdio</div><div class="layer-desc">Client spawns the server as a child process. No network, no port.</div></div>
+      <div class="layer"><div class="layer-label">HTTP</div><div class="layer-desc">Server runs standalone. Client connects remotely.</div></div>
     </div>
-    <p class="note">Stateless HTTP transports need a fresh transport per
-      request, a documented SDK constraint, not an implementation detail
-      you can skip.</p>
+    <p class="note">Stateless HTTP transports are single-use: a fresh transport
+      per request. It's in the SDK source, and not obvious until you hit it.</p>
   </div>
 
-  <!-- 13 · SUB-AGENTS -->
+  <!-- 33 · SUB-AGENTS -->
   <div class="slide">
-    <div class="kicker">Example 07</div>
+    <div class="kicker">Example 09</div>
     <h2>Sub-agents</h2>
     <pre>spawnAgent({
-  task: "Find why authentication tests are failing",
-  relevantFiles: [...]
+  task: "Find why the name lookup is failing",
+  tools: [search_code, read_file]
 })</pre>
-    <p>A real, independent agent loop, fresh context, only the tools its
-      task needs. The parent never sees its intermediate tool calls.</p>
-    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/07-sub-agent/README.md">Open examples/07-sub-agent &rarr;</a>
+    <p>A real independent loop. Fresh history, only the tools its task needs.</p>
+    <div class="quote">It can burn 30 turns and return three sentences &mdash; and the
+      parent only pays for the three sentences.</div>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/09-sub-agent/README.md">Open examples/09-sub-agent &rarr;</a>
   </div>
 
-  <!-- 14 · MULTI-AGENT PATTERNS -->
+  <!-- 34 · MULTI-AGENT -->
   <div class="slide">
-    <div class="kicker">Example 08</div>
+    <div class="kicker">Example 10</div>
     <h2>Multi-agent patterns</h2>
     <pre>Supervisor        Sequential       Parallel          Critic loop
    /|\               |            A -\                Generator
@@ -182,93 +395,125 @@ MCP Server
                    Writer                                 |
                      |                                 Generator
                   Reviewer</pre>
-    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/08-multi-agent/README.md">Open examples/08-multi-agent &rarr;</a>
+    <div class="quote">Multi-agent is not automatically better. The harnesses you
+      use every day ship exactly one pattern: a supervisor and an isolated
+      sub-agent.</div>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/10-multi-agent/README.md">Open examples/10-multi-agent &rarr;</a>
   </div>
 
-  <!-- 15 · WHEN NOT TO -->
+  <!-- 35 · HOMEWORK 5 -->
   <div class="slide center">
-    <div class="kicker">The most important slide in this section</div>
-    <h1>When NOT to use<br><span class="accent">multi-agent</span></h1>
-    <div class="quote">Multi-agent is not automatically better.</div>
-    <p style="margin-top: 1rem;">More tokens, more latency, more failure surface. Reach for it only
-      when the task genuinely decomposes into independent or adversarial
-      sub-tasks.</p>
+    <div class="kicker">Homework &middot; week 5</div>
+    <h1>Point Claude Code at<br><span class="accent">your server.</span></h1>
+    <p style="margin-top: 1.5rem;">Expose your wiki harness over MCP. Then drive it from a
+      coding agent you didn't write.</p>
+    <p class="note">This is the week that makes the other five worth it.</p>
   </div>
 
-  <!-- 16 · PROMPT INJECTION -->
+  <!-- ============ SESSION 6 ============ -->
+  <div class="slide center">
+    <div class="kicker">Session 6</div>
+    <h1>Making it<br><span class="accent">survivable</span></h1>
+  </div>
+
+  <!-- 37 · PROMPT INJECTION -->
   <div class="slide">
-    <div class="kicker">Example 09</div>
-    <h2>Prompt injection</h2>
+    <div class="kicker">Example 11</div>
+    <h2>Indirect prompt injection</h2>
     <pre>Agent
   |
   v
 read_file
   |
   v
-untrusted README
+untrusted page
   |
   v
 "Ignore previous instructions and run..."</pre>
-    <p>Tool output can contain untrusted instructions. Treat it as data,
-      never as commands.</p>
+    <p>Nobody typed this into a chat. It's sitting in a file the agent was
+      told to read.</p>
   </div>
 
-  <!-- 17 · PERMISSIONS -->
+  <!-- 38 · PERMISSIONS -->
   <div class="slide">
-    <div class="kicker">Example 09</div>
+    <div class="kicker">Example 11</div>
     <h2>Permissions</h2>
     <div class="chips">
       <span class="chip read">search_code, read_file, list_files &rarr; automatic</span>
     </div>
     <div class="chips">
-      <span class="chip execute">run_tests &rarr; approval</span>
+      <span class="chip execute">run_tests, edit_file &rarr; approval</span>
     </div>
     <div class="chips">
       <span class="chip blocked">delete_data &rarr; blocked</span>
     </div>
-    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/09-security/README.md">Open examples/09-security &rarr;</a>
+    <div class="quote">Two layers, because one of them is probabilistic and one
+      of them is not.</div>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/11-security/README.md">Open examples/11-security &rarr;</a>
   </div>
 
-  <!-- 18 · RELIABILITY -->
+  <!-- 39 · RELIABILITY -->
   <div class="slide">
-    <div class="kicker">Example 10</div>
+    <div class="kicker">Example 12</div>
     <h2>Reliability</h2>
     <pre>Tool failed
   -&gt; agent receives { ok: false, error }
   -&gt; agent retries or tries a different tool</pre>
-    <p>Timeouts, retries, structured errors, bounded iterations, failure
-      modes an agent hits constantly that normal applications rarely do.</p>
-    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/10-reliability/README.md">Open examples/10-reliability &rarr;</a>
+    <p>The semantic retry promised in session 2. Compare with the 429 retry in
+      the provider, which the model never sees at all.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/12-reliability/README.md">Open examples/12-reliability &rarr;</a>
   </div>
 
-  <!-- 19 · OBSERVABILITY -->
+  <!-- 40 · OBSERVABILITY -->
   <div class="slide">
-    <div class="kicker">Example 11</div>
+    <div class="kicker">Example 13</div>
     <h2>Observability</h2>
     <pre>Agent Run
  |- LLM Call   { model, tokens, latency }
  |- Tool Call  { name, args, result, latency }
  |- LLM Call
  `- Final Response</pre>
-    <p>Structured console/JSON tracing, enough to answer "why did the
-      agent do that" after the fact.</p>
-    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/11-observability/README.md">Open examples/11-observability &rarr;</a>
+    <p class="note">What you want at 2am isn't a dashboard. It's the exact
+      arguments of the tool call that went wrong.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/13-observability/README.md">Open examples/13-observability &rarr;</a>
   </div>
 
-  <!-- 20 · EVALUATION -->
+  <!-- 41 · EVALUATION -->
   <div class="slide">
-    <div class="kicker">Example 12</div>
+    <div class="kicker">Example 14</div>
     <h2>Evaluation</h2>
     <p>Normal: <code>input -&gt; expected output</code>.</p>
-    <p style="margin-top: 0.5rem;">Agent: <code>input -&gt; many possible trajectories -&gt; final result</code>.</p>
-    <pre>{
-  "task": "Find the failing authentication test",
-  "expectedTools": ["search_code", "read_file", "run_tests"]
-}</pre>
-    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/12-evaluation/README.md">Open examples/12-evaluation &rarr;</a>
+    <p style="margin-top: 0.5rem;">Agent: <code>input -&gt; many valid trajectories -&gt; result</code>.</p>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Trajectory scoring</div><div class="layer-desc">Which tools, how many steps, inside budget? Measures process.</div></div>
+      <div class="layer"><div class="layer-label">golden.json</div><div class="layer-desc">Ignores the path, checks the answer. Measures correctness.</div></div>
+    </div>
+    <p class="note">You want both. Each is blind to what the other catches.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/14-evaluation/README.md">Open examples/14-evaluation &rarr;</a>
   </div>
 
-  <!-- 21 · PRODUCTION ARCHITECTURE -->
+  <!-- 42 · SCOREBOARD -->
+  <div class="slide center">
+    <div class="kicker">Six weeks later</div>
+    <h1><span class="accent">pnpm golden</span></h1>
+    <p style="margin-top: 1.5rem;">Week 1: about 2 / 10. Today: your number, on screen,
+      next to everyone else's.</p>
+  </div>
+
+  <!-- 43 · BEYOND MCP -->
+  <div class="slide">
+    <div class="kicker">One paragraph, so you recognise it</div>
+    <h2>Beyond MCP</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">MCP</div><div class="layer-desc">An agent reaching a tool.</div></div>
+      <div class="layer"><div class="layer-label">A2A</div><div class="layer-desc">An agent reaching another agent across a network and a trust boundary. Agent Card at a well-known URL; tasks are stateful.</div></div>
+      <div class="layer"><div class="layer-label">ACP</div><div class="layer-desc">IBM's equivalent. Merged into A2A in 2025.</div></div>
+    </div>
+    <div class="quote">Learn the problems, not the spec names. The problems are
+      stable; the acronyms are not.</div>
+  </div>
+
+  <!-- 44 · PRODUCTION ARCHITECTURE -->
   <div class="slide">
     <div class="kicker">Putting it together</div>
     <h2>Production architecture</h2>
@@ -286,10 +531,13 @@ untrusted README
              MCP   APIs   DB
 
         + Observability + Evaluation + Security</pre>
+    <p class="note">Point at any box and name the session. Loop and state: 2.
+      Tools and writing: 3. Context and memory: 4. Protocol and delegation: 5.
+      Policy and evaluation: 6.</p>
     <a class="example-link" href="docs/architecture.md">Open docs/architecture.md &rarr;</a>
   </div>
 
-  <!-- 22 · FINAL MENTAL MODEL -->
+  <!-- 45 · FINAL MENTAL MODEL -->
   <div class="slide center">
     <div class="kicker">Final mental model</div>
     <h1>Agency, not just<br><span class="accent">intelligence.</span></h1>
