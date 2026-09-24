@@ -46,9 +46,10 @@ model sees, costs tokens) and agent state (iteration counts, budgets,
 which files have been read - never sent to the model). Two production
 concerns sit here. **Compaction**: the history only grows, so at a
 threshold the runtime summarises the oldest middle section and continues,
-rather than truncating and losing the tail. **Persistence**: the
-transcript is written after every turn, so a run survives a crash and can
-be resumed or replayed. Longer-lived state (project memory, prior run
+rather than truncating and losing the tail - never cutting between a tool
+call and its results. **Persistence**: every message is appended to the
+transcript as it happens, and compaction is logged as an entry rather than
+an overwrite, so a run survives a crash and can be resumed or replayed. Longer-lived state (project memory, prior run
 summaries) is usually a file or a database the runtime loads into the
 system prompt before the first call.
 
@@ -68,10 +69,12 @@ no-op, and returns a diff. Those rules live in the runtime, not the
 prompt - a prompt shapes a tendency, code sets a limit.
 
 **Retry** - two mechanisms, deliberately separate. Transport retry
-(429, 5xx, timeouts) lives in the provider, is handled deterministically,
+(429, 5xx, dropped connections, timeouts) lives in the provider, is handled deterministically,
 and never enters the conversation, because a rate limit carries nothing
 the model can act on. Semantic retry (Example 12) hands a structured
-`{ ok, error }` back to the model so it can change strategy.
+`{ ok, error, retryable }` back to the model so it can try again or take
+another route. The runtime does not retry tools on its own: a timed-out
+tool may still be running, and repeating a write applies it twice.
 
 **MCP** (Example 08) - one way tools reach the tool layer: instead of the
 runtime importing every integration directly, it speaks one protocol to
@@ -79,16 +82,18 @@ any number of MCP servers. Not the only way tools are exposed - plain
 function calls and direct API clients still work - but the option to
 decouple runtime from implementation when a tool is shared, remote, or
 third-party. In practice a harness is the client far more often than the
-server.
+server - and the client decides which of a server's tools the model gets,
+using annotations like `readOnlyHint` as hints, not guarantees.
 
 **Sub-agents and multi-agent** (Examples 09, 10) - a way of structuring
 the Model + Tool Layer relationship, not a separate box in this diagram.
-A sub-agent is a full runtime instance, called from inside a tool, with an
-isolated context: it can spend thirty turns and return three sentences,
+A sub-agent is a full runtime instance behind a `delegate` tool the parent
+model chooses to call (Claude Code's Task tool), with an isolated context: it can spend thirty turns and return three sentences,
 and the parent only pays for the three sentences.
 
 **Observability** (Example 13) - every LLM call and tool call the runtime
-makes gets traced. This is what makes "why did the agent do that"
+makes gets traced, with the token counts the provider reports. This is
+what makes "why did the agent do that"
 answerable after the fact.
 
 **Evaluation** (Example 14) - runs the same runtime against a fixed
