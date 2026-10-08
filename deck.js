@@ -29,4 +29,11 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "End") show(slides.length - 1);
 });
 
-show(0);
+// #3 opens at the session 3 title slide.
+function showFromHash() {
+  const target = document.getElementById(`session-${location.hash.slice(1)}`);
+  show(target ? [...slides].indexOf(target) : 0);
+}
+
+window.addEventListener("hashchange", showFromHash);
+showFromHash();
