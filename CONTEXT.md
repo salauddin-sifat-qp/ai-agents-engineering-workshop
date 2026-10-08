@@ -9,7 +9,7 @@ A folder under `examples/NN-name/` containing the code for one workshop stage. E
 _Avoid_: stage, step, module (when referring to a workshop folder)
 
 **Fixture Repo**:
-The tiny, deliberately-crafted sample codebase (with a known failing test) bundled inside the workshop and used as the target for the Engineering Agent's tools (search_code, read_file, list_files, run_tests, and from example 06 edit_file). Deterministic and identical for every attendee. Themed as a small "Pokédex API" service for memorability — the theme is narrative flavor only; the tools and skills exercised are unchanged plain engineering tools (real code, real tests, real git).
+The tiny, deliberately-crafted sample codebase (with a known failing test) bundled inside the workshop and used as the target for the Engineering Agent's tools (search_code, read_file, list_files, run_tests, and from example 05 edit_file). Deterministic and identical for every attendee. Themed as a small "Pokédex API" service for memorability — the theme is narrative flavor only; the tools and skills exercised are unchanged plain engineering tools (real code, real tests, real git).
 _Avoid_: sandbox, target project, test repo
 
 **Engineering Agent**:

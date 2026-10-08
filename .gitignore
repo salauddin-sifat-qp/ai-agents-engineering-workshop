@@ -5,3 +5,4 @@ dist/
 .vitest/
 script.md
 .session/
+.traces/

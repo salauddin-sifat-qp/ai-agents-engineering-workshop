@@ -88,7 +88,7 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  examples/05-tool-design:
+  examples/05-tools-and-edit:
     dependencies:
       llm-provider:
         specifier: workspace:*
@@ -104,7 +104,7 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  examples/06-write-tool:
+  examples/06-context:
     dependencies:
       llm-provider:
         specifier: workspace:*
@@ -120,23 +120,7 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  examples/07-context:
-    dependencies:
-      llm-provider:
-        specifier: workspace:*
-        version: link:../../packages/llm-provider
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.2
-      tsx:
-        specifier: ^4.19.0
-        version: 4.23.13
-      typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
-
-  examples/08-mcp:
+  examples/07-mcp:
     dependencies:
       '@modelcontextprotocol/sdk':
         specifier: ^1.30.0
@@ -158,7 +142,7 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  examples/09-sub-agent:
+  examples/08-sub-agent:
     dependencies:
       llm-provider:
         specifier: workspace:*
@@ -174,7 +158,7 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  examples/10-multi-agent:
+  examples/09-policy:
     dependencies:
       llm-provider:
         specifier: workspace:*
@@ -190,55 +174,7 @@ importers:
         specifier: ^5.6.0
         version: 5.9.3
 
-  examples/11-security:
-    dependencies:
-      llm-provider:
-        specifier: workspace:*
-        version: link:../../packages/llm-provider
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.2
-      tsx:
-        specifier: ^4.19.0
-        version: 4.23.13
-      typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
-
-  examples/12-reliability:
-    dependencies:
-      llm-provider:
-        specifier: workspace:*
-        version: link:../../packages/llm-provider
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.2
-      tsx:
-        specifier: ^4.19.0
-        version: 4.23.13
-      typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
-
-  examples/13-observability:
-    dependencies:
-      llm-provider:
-        specifier: workspace:*
-        version: link:../../packages/llm-provider
-    devDependencies:
-      '@types/node':
-        specifier: ^22.0.0
-        version: 22.20.2
-      tsx:
-        specifier: ^4.19.0
-        version: 4.23.13
-      typescript:
-        specifier: ^5.6.0
-        version: 5.9.3
-
-  examples/14-evaluation:
+  examples/10-trace-and-eval:
     dependencies:
       llm-provider:
         specifier: workspace:*

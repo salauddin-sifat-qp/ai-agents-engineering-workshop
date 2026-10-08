@@ -1,11 +1,11 @@
 # Homework: build the QuestionPro Wiki Harness
 
-Across six sessions you build your own harness in this folder. The instructor
+Across five sessions you build your own harness in this folder. The instructor
 builds the same ideas against a buggy Pokédex API in `examples/`; you build
 them against the QuestionPro help centre.
 
 **You only ever edit files under `harness/`.** Upstream never touches
-`harness/src`, so `git pull upstream main` stays conflict-free all six weeks.
+`harness/src`, so `git pull upstream main` stays conflict-free all five weeks.
 
 ## The corpus
 
@@ -98,7 +98,18 @@ it were complete.
 **Done when:** `pnpm golden` runs and gives you a baseline score; a 429
 recovers visibly instead of crashing; every run prints its own cost.
 
-## Session 3 — the write tool
+**In your own tool.** Do one real task at work with the coding agent you use
+daily (Claude Code, Codex, pi, or similar). Open its transcript or usage view
+and write down three numbers: loop iterations, tool calls, and tokens. Note
+which tool calls were reads and which were writes. Bring the numbers to
+session 4.
+
+> **This week (handed out in session 3):** do session 2 first, then
+> session 3's `editPage`. The edit tool is only useful once the loop exists,
+> and `pnpm golden` needs `ask()`. Sessions and compaction below are
+> stretch goals this week.
+
+## Session 3 — the write tool, context and sessions
 
 Build `src/edit.ts`:
 
@@ -125,32 +136,40 @@ Stretch: refuse the edit if the page changed on disk since it was read.
 
 Classify every tool `read` / `write` / `execute`.
 
-**Done when:** `pnpm verify` passes the session 3 checks; `git diff
-harness/corpus` shows a clean, minimal patch; reset with `pnpm --filter
-harness reset`.
+### Stretch: sessions
 
-## Session 4 — context and sessions
+Build `src/session.ts` (`saveSession`, `loadSession`). Persist the
+transcript as JSONL after **every** turn, then add `--resume`. Appending one
+line per message is better than rewriting the file: a crash can then only
+lose the last line. `pnpm verify` round-trips `saveSession` / `loadSession`
+through disk and puts your real session back afterwards.
 
-Build `src/context.ts` (`COMPACT_THRESHOLD_CHARS`, `compact`) and
-`src/session.ts` (`saveSession`, `loadSession`).
+**Done when:** `pnpm verify` passes the `editPage` checks; `git diff
+harness/corpus` shows a clean, minimal patch (reset with `pnpm --filter
+harness reset`). Stretch done when `--resume` picks up mid-task after a
+Ctrl-C.
 
-Stop truncating tool output. Let the context grow, and compact it when it
-crosses the threshold: keep the system prompt and the task verbatim, keep the
-recent turns verbatim, summarise the middle.
+**Stretch.** Compaction in `src/context.ts` (`COMPACT_THRESHOLD_CHARS`,
+`compact`): keep the system prompt, the task and the recent turns verbatim,
+summarise the middle, never cut between a tool call and its results.
+A `MEMORY.md` loaded into the system prompt at startup.
 
-Persist the transcript after **every** turn, then add `--resume`. Appending
-one line per message is better than rewriting the file: a crash can then
-only lose the last line. `pnpm verify` round-trips `saveSession` /
-`loadSession` through disk and puts your real session back afterwards.
+**In your own tool.**
 
-When you cut the middle out, never cut between a tool call and its results.
+1. Write a permission config for one real work repo. In Claude Code that is
+   `permissions.allow` and `permissions.deny` in `.claude/settings.json`;
+   other tools have an equivalent. At least three allow rules (test, lint,
+   read-only git) and three deny rules (`.env` and secrets, `git push`,
+   `rm -rf`), each with a one-line reason.
+2. Open one of its session files (pi: `~/.pi/agent/sessions/`). Find the
+   tool calls and any compaction entry.
+3. For a week, start a fresh session per task and read every diff before
+   accepting it. Compare token counts with the numbers from session 2's
+   own-tool task.
 
-Add a `MEMORY.md` your harness loads into the system prompt at startup.
+Bring one permission rule you had to change, and why.
 
-**Done when:** `pnpm verify` passes the session 4 checks; a long run compacts
-and keeps going; `--resume` picks up mid-task after a Ctrl-C.
-
-## Session 5 — MCP
+## Session 4 — MCP
 
 Expose your harness's tools as an MCP server over stdio.
 
@@ -160,24 +179,52 @@ Then connect a real harness to it — Claude Code, pi, Codex, whichever you use
 Mark each tool with MCP annotations (`readOnlyHint: true` for search and read,
 `destructiveHint: true` for edit). The client you connect uses them to decide
 what needs approval - the same read/write/execute tag from session 3.
+`examples/07-mcp` has both: annotations in `mcpServer.ts`, and `pnpm
+07:connect` prints the commands to connect a server to pi or Claude Code.
 
 **Done when:** a coding agent you did not write is searching the QuestionPro
 help centre through a server you did write. Screenshot it. This is the week
-that makes the other five worth it.
+that makes the other four worth it.
 
-## Session 6 — make it survivable, then demo
+**Stretch.** A `delegate` tool that hands a research question to a sub-agent
+with only the read tools (`examples/08-sub-agent`).
 
-Add the approval policy (`write` and `execute` need a human), structured tool
-errors, and one JSON trace line per LLM and tool call.
+**In your own tool.** Connect one real MCP server you would use at work
+(GitHub, your issue tracker, a read-only database). Check which of its tools
+are read-only, and only auto-approve those.
+
+## Session 5 — make it survivable, then demo
+
+Build `src/policy.ts` exporting a pre-tool hook:
+
+```ts
+export async function beforeToolCall(
+  tool: Tool,
+  args: unknown,
+): Promise<{ allow: true } | { allow: false; reason: string }>;
+```
+
+Call it before every tool call. `read` runs automatically; `write` and
+`execute` ask a human. A denial goes back to the model as a structured
+result (`{ ok: false, error, retryable }`), not a crash.
+`examples/09-policy` is the reference.
 
 Then plant a poisoned page in your corpus — an instruction hidden in a help
 article telling the agent to ignore its rules — and show what your harness
 does about it. Run it twice, with and without your system-prompt defence,
 and make sure the question you ask actually leads the agent to that page.
-`pnpm verify` has no session 6 checks; the demo is the check.
+`pnpm verify` checks the hook's export and that a read runs without asking;
+the demo is the real check.
+
+**Stretch.** One JSON trace line per LLM and tool call, written to a file
+(`examples/10-trace-and-eval`).
+
+**In your own tool.** Write one hook in the agent you use daily: for
+example, run the linter after every edit, or block any command that touches
+`.env`. It is the same pre-tool idea, in a tool you did not write.
 
 **Done when:** `pnpm verify` is all green, `pnpm golden --runs=3` is your
-best average of the six weeks, and you can demo the injection being
+best average of the five weeks, and you can demo the injection being
 contained.
 
 ---
@@ -188,7 +235,6 @@ contained.
 | ------------ | ------------------------------------------------------------------------------ |
 | 1            | `examples/01-basic-llm`, `examples/02-tool-calling`                            |
 | 2            | `examples/03-agent-loop`, `examples/04-state`, `packages/llm-provider` (retry) |
-| 3            | `examples/05-tool-design`, `examples/06-write-tool`                            |
-| 4            | `examples/07-context`                                                          |
-| 5            | `examples/08-mcp`, `examples/09-sub-agent`                                     |
-| 6            | `examples/11-security` … `examples/14-evaluation`                              |
+| 3            | `examples/05-tools-and-edit`, `examples/06-context`                            |
+| 4            | `examples/07-mcp`, `examples/08-sub-agent`                                     |
+| 5            | `examples/09-policy`, `examples/10-trace-and-eval`                             |

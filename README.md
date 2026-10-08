@@ -1,6 +1,6 @@
 # AI Agents Engineering Workshop
 
-Six sessions on how a coding harness actually works — Claude Code, Codex, pi,
+Five sessions on how a coding harness actually works — Claude Code, Codex, pi,
 opencode. Provider, system prompt, tools, the loop, the write tool, context
 and memory, protocols, delegation, policy, reliability, evaluation.
 
@@ -74,26 +74,27 @@ pnpm 03
 Examples with more than one entry point:
 
 ```bash
-pnpm 06          # edit_file  - the good write tool
-pnpm 06:naive    # write_file - the bad one, run this first
-pnpm 07          # compaction + memory + session persistence
-pnpm 07:resume
-pnpm 08          # MCP against a real external server
-pnpm 08:server   # MCP over stdio, our own server
-pnpm 08:http     # MCP over HTTP
-pnpm 10          # multi-agent: supervisor
-pnpm 10:sequential
-pnpm 10:parallel
-pnpm 10:critic
-pnpm 11          # prompt-injection defence + approval gate
-pnpm 11:unguarded  # approval gate only, the baseline
+pnpm 05            # bad tool vs narrow tools
+pnpm 05:naive      # write_file - the bad write tool, run this first
+pnpm 05:edit       # edit_file  - the good one
+pnpm 06            # compaction + memory + session persistence
+pnpm 06:resume
+pnpm 06:fork <id>  # continue from an earlier session entry
+pnpm 07            # MCP against a real external server
+pnpm 07:server     # MCP over stdio, our own server
+pnpm 07:connect    # connect our server to pi or Claude Code
+pnpm 09            # prompt-injection defence + approval hook
+pnpm 09:unguarded  # approval hook only, the baseline
+pnpm 09:errors     # structured tool errors: search is offline
+pnpm 10            # one traced run, written to .traces/
+pnpm 10:eval       # score a dataset from its traces
 ```
 
-Examples 06 and 07 write to their fixture. Undo with:
+Examples 05 and 06 write to their fixture. Undo with:
 
 ```bash
-pnpm --filter 06-write-tool reset
-pnpm --filter 07-context reset   # also deletes the saved session
+pnpm --filter 05-tools-and-edit reset
+pnpm --filter 06-context reset   # also deletes the saved session
 ```
 
 ## Homework
@@ -115,16 +116,12 @@ Assignments and success criteria: [`harness/README.md`](harness/README.md)
 | 02  | `tool-calling`  | The model requests, the application executes                         | 1       |
 | 03  | `agent-loop`    | Observe -> decide -> act -> repeat, with `MAX_ITERATIONS`            | 2       |
 | 04  | `state`         | History vs. agent state; truncation; tokens per call from `usage`    | 2       |
-| 05  | `tool-design`   | Narrow typed tools vs. `execute_anything`; a `ToolRegistry`          | 3       |
-| 06  | `write-tool`    | `edit_file` vs. `write_file`: read-before-write, exact match, diffs  | 3       |
-| 07  | `context`       | Compaction vs. truncation; `AGENTS.md` memory; session resume        | 4       |
-| 08  | `mcp`           | Consuming a real external server; then writing your own              | 5       |
-| 09  | `sub-agent`     | A `delegate` tool: nested loop, isolated context (Claude's Task)     | 5       |
-| 10  | `multi-agent`   | Supervisor, sequential, parallel, critic loop                        | 5       |
-| 11  | `security`      | Tool classification, approval gate, prompt injection                 | 6       |
-| 12  | `reliability`   | Structured tool errors; the model decides to retry or reroute        | 6       |
-| 13  | `observability` | Structured JSON tracing of every LLM and tool call                   | 6       |
-| 14  | `evaluation`    | Rule-based scoring of an agent's tool-call trajectory                | 6       |
+| 05  | `tools-and-edit`  | Narrow tools vs. `execute_anything`; `write_file` vs. `edit_file`    | 3       |
+| 06  | `context`         | Compaction; session JSONL with resume and fork; `AGENTS.md` memory   | 3       |
+| 07  | `mcp`             | Consume a real server; write your own; connect it to your own tool   | 4       |
+| 08  | `sub-agent`       | A `delegate` tool: nested loop, isolated context (Claude's Task)     | 4       |
+| 09  | `policy`          | Pre-tool hook, approval, prompt injection, structured tool errors    | 5       |
+| 10  | `trace-and-eval`  | JSONL trace of every call; trajectory eval scored from the trace     | 5       |
 
 ## Maintainer
 

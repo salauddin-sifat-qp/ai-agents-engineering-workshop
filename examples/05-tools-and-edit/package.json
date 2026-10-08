@@ -1,0 +1,22 @@
+{
+  "name": "05-tools-and-edit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/index-tools.ts",
+    "naive": "tsx src/index-naive.ts",
+    "edit": "tsx src/index.ts",
+    "reset": "git checkout -- src/fixture",
+    "pretest:fixture": "cd src/fixture/pokedex-api && npm install",
+    "test:fixture": "cd src/fixture/pokedex-api && npm test"
+  },
+  "dependencies": {
+    "llm-provider": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}

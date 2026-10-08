@@ -195,21 +195,21 @@ if (typeof editPage === "function") {
   record(3, "src/edit.ts exports `editPage`", "pending");
 }
 
-// --- session 4: context and sessions ---------------------------------------
+// --- session 3: context and sessions ---------------------------------------
 
 const contextModule = await loadModule("context.ts");
 const threshold = contextModule?.COMPACT_THRESHOLD_CHARS;
 
 record(
-  4,
-  "compaction has a threshold",
+  3,
+  "compaction has a threshold (stretch)",
   typeof threshold === "number" && threshold > 0 ? "pass" : "pending",
   typeof threshold === "number" ? `${threshold} chars` : undefined,
 );
 
 record(
-  4,
-  "src/context.ts exports `compact`",
+  3,
+  "src/context.ts exports `compact` (stretch)",
   typeof contextModule?.compact === "function" ? "pass" : "pending",
 );
 
@@ -231,18 +231,41 @@ if (typeof save === "function" && typeof load === "function") {
     const restored = await load();
     const ok = restored?.length === sample.length;
     record(
-      4,
-      "sessions round-trip through disk",
+      3,
+      "sessions round-trip through disk (stretch)",
       ok ? "pass" : "fail",
       ok ? undefined : `saved ${sample.length}, loaded ${restored?.length ?? 0}`,
     );
   } catch (error) {
-    record(4, "sessions round-trip through disk", "fail", asMessage(error));
+    record(3, "sessions round-trip through disk (stretch)", "fail", asMessage(error));
   } finally {
     if (original) await save(original).catch(() => undefined);
   }
 } else {
-  record(4, "sessions round-trip through disk", "pending", "saveSession / loadSession");
+  record(3, "sessions round-trip through disk (stretch)", "pending", "saveSession / loadSession");
+}
+
+// --- session 5: the policy hook ---------------------------------------------
+
+const policyModule = await loadModule("policy.ts");
+const beforeToolCall = policyModule?.beforeToolCall as
+  | ((tool: unknown, args: unknown) => Promise<{ allow?: boolean }>)
+  | undefined;
+
+if (typeof beforeToolCall === "function") {
+  record(5, "src/policy.ts exports `beforeToolCall`", "pass");
+
+  // Only a read is exercised: a write or execute would wait on a human.
+  const readTool = { schema: { name: "search_docs" }, kind: "read", run: async () => "" };
+  const decision = await beforeToolCall(readTool, { query: "quota" }).catch(() => undefined);
+  record(
+    5,
+    "a read tool runs without asking",
+    decision?.allow === true ? "pass" : "fail",
+    decision?.allow === true ? undefined : `got: ${JSON.stringify(decision)}`,
+  );
+} else {
+  record(5, "src/policy.ts exports `beforeToolCall`", "pending");
 }
 
 // --- report ----------------------------------------------------------------

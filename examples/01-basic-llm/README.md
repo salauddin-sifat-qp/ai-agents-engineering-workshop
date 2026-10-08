@@ -20,7 +20,7 @@ Two different roles go into every `chat()` call:
 
 A model generally treats the system message as its highest-priority
 instruction, overriding anything conflicting in the user message or in
-tool output. Example 11 (Security) relies on exactly that property: its
+tool output. Example 09 (Security) relies on exactly that property: its
 system prompt tells the agent to only follow user instructions, as a
 defense against a file it reads trying to inject its own.
 
