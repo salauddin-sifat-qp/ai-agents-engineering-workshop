@@ -254,6 +254,168 @@ pre {
   color: var(--fg-muted);
   margin-top: 0.15rem;
 }
+.agenda a {
+  text-decoration: none;
+}
+.agenda .title,
+.agenda .desc {
+  display: block;
+}
+.agenda a:hover .title {
+  color: var(--accent);
+}
+
+.home {
+  position: fixed;
+  top: 1rem;
+  left: 1.5rem;
+  z-index: 100;
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+  text-decoration: none;
+}
+.home:hover {
+  color: var(--accent);
+}
+
+/* harness anatomy */
+.arch {
+  display: grid;
+  grid-template-columns: 1fr 2.6fr 1.3fr;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1.75rem;
+  width: 100%;
+  max-width: 1100px;
+}
+.arch-side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.arch-node {
+  padding: 0.75rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--fg);
+  text-align: center;
+}
+.arch-arrow {
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+.arch-core {
+  border: 2px solid var(--accent);
+  border-radius: 14px;
+  padding: 1rem;
+}
+.arch-title {
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 0.75rem;
+}
+.arch-title span {
+  font-weight: 400;
+  color: var(--fg-muted);
+  font-size: 0.9rem;
+}
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+.arch-cell {
+  display: flex;
+  flex-direction: column;
+  padding: 0.6rem 0.85rem;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.arch-cell b {
+  color: var(--fg);
+}
+.arch-cell span {
+  font-size: 0.85rem;
+  color: var(--fg-muted);
+}
+.arch-cell.hot {
+  border-color: var(--accent);
+}
+
+/* animated loop */
+.flow {
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    "user loop model"
+    "session policy tool";
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem 4rem;
+  margin-top: 1.75rem;
+  width: 100%;
+  max-width: 900px;
+  cursor: pointer;
+}
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.1rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  font-weight: 600;
+  color: var(--fg);
+  transition: border-color 0.3s, background 0.3s, transform 0.3s;
+}
+.flow-node small {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--fg-muted);
+}
+.flow-node.lit {
+  border-color: var(--accent);
+  background: oklch(61.6% 0.1696 251.2 / 10%);
+  transform: scale(1.05);
+}
+.flow-dot {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px oklch(61.6% 0.1696 251.2 / 20%);
+  transition: left 0.8s ease-in-out, top 0.8s ease-in-out;
+  pointer-events: none;
+}
+.flow-caption {
+  display: flex;
+  gap: 1rem;
+  align-items: baseline;
+  margin-top: 2rem;
+  min-height: 3.5rem;
+  max-width: 900px;
+  font-size: 1.2rem;
+  color: var(--fg-sub);
+}
+.flow-step {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .flow-dot,
+  .flow-node {
+    transition: none;
+  }
+}
 
 .example-link {
   display: inline-block;
