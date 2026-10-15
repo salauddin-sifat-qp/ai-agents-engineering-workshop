@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Session 3 · Tools, edit, and context — AI Agents Engineering Workshop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<a class="home" href="./">&larr; All sessions</a>
+<div class="slides">
+
+  <!-- SESSION 3 -->
+  <div class="slide center active" id="session-3">
+    <div class="kicker">Session 3</div>
+    <h1>Tools, edit,<br><span class="accent">and context</span></h1>
+  </div>
+
+  <!-- TOOL DESIGN -->
+  <div class="slide">
+    <div class="kicker">Example 05</div>
+    <h2>Tool design</h2>
+    <p>Bad:</p>
+    <pre>executeAnything(input: string)</pre>
+    <p style="margin-top: 1.25rem;">Good:</p>
+    <pre>searchCode(query, path?)
+readFile(path)
+listFiles(path?)
+runTests(test?)</pre>
+    <p class="note">You can't write a policy for <code>executeAnything</code>.
+      A policy needs to know what a tool does, and it does anything.</p>
+    <p class="note">Yes, Claude Code ships <code>Bash</code> anyway. It pays for it:
+      a sandbox, command allowlists like <code>Bash(npm test:*)</code>, and approval.
+      Narrow where you can; a shell only with the bill paid.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/05-tools-and-edit/README.md">Open examples/05-tools-and-edit &rarr;</a>
+  </div>
+
+  <!-- TOOL PHILOSOPHIES -->
+  <div class="slide">
+    <div class="kicker">How many tools?</div>
+    <h2>Bash is the generic tool.<br>Nothing else should be.</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">pi &middot; four tools</div><div class="layer-desc"><code>read</code>, <code>bash</code>, <code>edit</code>, <code>write</code>. The model already knows Unix; every tool schema is paid for on every call. Small prompt, trust the model.</div></div>
+      <div class="layer"><div class="layer-label">Claude Code &middot; many tools</div><div class="layer-desc"><code>Read</code>, <code>Grep</code>, <code>Glob</code>, <code>Edit</code>, <code>Bash</code>, web, sub-agents&hellip; A dedicated tool can be controlled: Grep runs without asking, Bash asks.</div></div>
+    </div>
+    <p class="note">The name and description are prompt. <code>helper</code> makes the model guess;
+      <code>search_code</code> tells it when.</p>
+  </div>
+
+  <!-- NAIVE WRITE -->
+  <div class="slide">
+    <div class="kicker">Example 05 &middot; the one everyone builds first</div>
+    <h2>write_file(path, content)</h2>
+    <pre>pnpm 05:naive
+git diff --stat examples/05-tools-and-edit/src/fixture</pre>
+    <p><code>read_file</code> showed the model 4,000 of 5,800 characters. It
+      rewrote the file from what it saw. Everything below the cut is gone, the
+      tool returned <code>ok</code>, and the tests may still pass.</p>
+    <div class="quote">No diff means no review. No review means nobody notices
+      until much later.</div>
+  </div>
+
+  <!-- EDIT TOOL -->
+  <div class="slide">
+    <div class="kicker">Example 05 &middot; the real one</div>
+    <h2>edit_file &mdash; four rules</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Read before write</div><div class="layer-desc">Editing an unread file is editing a remembered file.</div></div>
+      <div class="layer"><div class="layer-label">Exactly one match</div><div class="layer-desc">Zero and many are <em>different</em> errors with different fixes.</div></div>
+      <div class="layer"><div class="layer-label">Failed match is an error</div><div class="layer-desc">Never a silent no-op. The worst case is the agent reasoning on from a fix that never landed.</div></div>
+      <div class="layer"><div class="layer-label">Return a diff</div><div class="layer-desc">A human must be able to review it without opening the file.</div></div>
+    </div>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/05-tools-and-edit/README.md">Open examples/05-tools-and-edit &rarr;</a>
+  </div>
+
+  <!-- EDIT IN PRODUCTION -->
+  <div class="slide">
+    <div class="kicker">And that's the simple version</div>
+    <h2>What pi's edit tool adds</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Line endings</div><div class="layer-desc">CRLF normalised before matching, restored on write.</div></div>
+      <div class="layer"><div class="layer-label">Invisible BOM</div><div class="layer-desc">Stripped before matching. The model can't see it.</div></div>
+      <div class="layer"><div class="layer-label">Fuzzy fallback</div><div class="layer-desc">Trailing spaces, smart quotes, Unicode dashes normalised if the exact match fails.</div></div>
+      <div class="layer"><div class="layer-label">Many edits, one call</div><div class="layer-desc">Each matched against the original file. No overlaps.</div></div>
+      <div class="layer"><div class="layer-label">Per-file queue</div><div class="layer-desc">Parallel edits to one file can't race.</div></div>
+    </div>
+    <p class="note">Every line is a bug someone hit in production.</p>
+  </div>
+
+  <!-- PROMPT VS CODE -->
+  <div class="slide center">
+    <div class="kicker">The takeaway of session 3</div>
+    <h1>Prompts shape tendencies.<br><span class="accent">Code sets limits.</span></h1>
+    <p style="margin-top: 1.5rem;">The prompt asks the model to read before editing.
+      The runtime <em>refuses</em> if it hasn't. Those are not the same thing.</p>
+  </div>
+
+  <!-- COMPACTION -->
+  <div class="slide">
+    <div class="kicker">Example 06</div>
+    <h2>Compaction</h2>
+    <pre>[system] [task] [..... summarised .....] [recent turns verbatim]</pre>
+    <div class="box">
+      <div class="layer"><div class="layer-label">System + task stay verbatim</div><div class="layer-desc">Lose the task and the agent forgets what it was doing.</div></div>
+      <div class="layer"><div class="layer-label">Recent turns stay verbatim</div><div class="layer-desc">That's where the live work is.</div></div>
+      <div class="layer"><div class="layer-label">The middle gets summarised</div><div class="layer-desc">That's where the bulk and the redundancy are.</div></div>
+    </div>
+    <p class="note">"Recent" is a size, not only a count: one huge result kept
+      verbatim and compaction fires again every turn.</p>
+    <div class="quote">Truncation deletes. Compaction remembers, in less space.</div>
+  </div>
+
+  <!-- THE BUG -->
+  <div class="slide">
+    <div class="kicker">The bug everyone hits once</div>
+    <h2>Orphaned tool results</h2>
+    <pre>assistant: tool_call  id=abc   &lt;- cut by compaction
+tool:      result     id=abc   &lt;- now an orphan
+                               -&gt; provider rejects the whole request</pre>
+    <p>Cut the middle out and you can strand a tool result whose call is gone.
+      Most providers reject the entire request. Rule: never cut between a call
+      and its results.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/06-context/README.md">Open examples/06-context &rarr;</a>
+  </div>
+
+  <!-- SESSIONS -->
+  <div class="slide">
+    <div class="kicker">Persistence</div>
+    <h2>Save every turn,<br>not at the end</h2>
+    <pre>.session/transcript.jsonl   # one message per line, appended, never rewritten
+                            # compaction is an entry, not an overwrite
+
+pnpm 06          # Ctrl-C partway through
+pnpm 06:resume   # picks up mid-task</pre>
+    <div class="quote">A session you can only resume after a clean exit is a
+      session you cannot resume. Crashing is exactly when you want it.</div>
+  </div>
+
+  <!-- YOUR OWN TOOL'S JSONL -->
+  <div class="slide">
+    <div class="kicker">Your own tool does the same</div>
+    <h2>Open its session file</h2>
+    <pre>ls ~/.pi/agent/sessions/          # pi   (Claude Code: ~/.claude/projects/)
+tail -n 3 &lt;session&gt;.jsonl | jq -c '{type, id, parentId}'
+grep -c '"type":"compaction"' &lt;session&gt;.jsonl</pre>
+    <p>One entry per line. Compaction is an entry, not an overwrite. Every entry
+      has a <code>parentId</code>, so a session is a <em>tree</em>: that's why
+      <code>/tree</code> and <code>/fork</code> can go back without losing anything.</p>
+  </div>
+
+  <!-- CONTEXT HYGIENE -->
+  <div class="slide">
+    <div class="kicker">The daily habit</div>
+    <h2>One task, one session</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Fresh per task</div><div class="layer-desc">pi <code>/new</code> &middot; Claude Code <code>/clear</code></div></div>
+      <div class="layer"><div class="layer-label">Shrink with a focus</div><div class="layer-desc"><code>/compact [instructions]</code></div></div>
+      <div class="layer"><div class="layer-label">See what it costs</div><div class="layer-desc">pi <code>/session</code> &middot; Claude Code <code>/cost</code></div></div>
+      <div class="layer"><div class="layer-label">Try another path</div><div class="layer-desc">pi <code>/tree</code>, <code>/fork</code></div></div>
+    </div>
+    <p class="note">A long session costs more on every call, and compaction loses detail.</p>
+  </div>
+
+  <!-- HOMEWORK 3 -->
+  <div class="slide">
+    <div class="kicker">Homework &middot; stages 2 + 3</div>
+    <h2>The loop, then<br>the edit tool</h2>
+    <p><strong>1. Stage 2:</strong> the loop in <code>src/agent.ts</code>, <code>read_page</code>,
+      tokens and cost per run. Then your baseline:</p>
+    <pre>pnpm golden --runs=3   # write this number down</pre>
+    <p><strong>2. Stage 3:</strong> <code>editPage</code> with the four rules, enforced in code.</p>
+    <pre>pnpm verify
+git diff harness/corpus   # one clean, minimal patch</pre>
+    <p><strong>Own tool:</strong> one real task &rarr; count iterations, tool calls, tokens.
+      Three allow and three deny rules for one real repo.</p>
+    <p class="note">Stretch: sessions as JSONL with resume, then compaction.</p>
+  </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<nav class="slide-nav">
+  <button id="prev" aria-label="Previous slide">&larr;</button>
+  <button id="next" aria-label="Next slide">&rarr;</button>
+</nav>
+<div class="slide-counter" id="counter"></div>
+
+<script src="deck.js"></script>
+</body>
+</html>

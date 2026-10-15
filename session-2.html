@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Session 2 · The loop, the bill, and retries — AI Agents Engineering Workshop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<a class="home" href="./">&larr; All sessions</a>
+<div class="slides">
+
+  <!-- SESSION 2 -->
+  <div class="slide center active" id="session-2">
+    <div class="kicker">Session 2</div>
+    <h1>The loop, the bill,<br><span class="accent">and retries</span></h1>
+  </div>
+
+  <!-- AGENT LOOP -->
+  <div class="slide">
+    <div class="kicker">Example 03</div>
+    <h2>The agent loop</h2>
+    <pre>while (!finished) {
+  response = model(messages, tools)
+
+  if (response.toolCalls.length) {
+    for (call of response.toolCalls)
+      messages.push(executeTool(call))
+  } else {
+    return response   // unless finish_reason is "length"
+  }
+}</pre>
+    <p class="note">Everything else in four sessions is a refinement of this.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/03-agent-loop/README.md">Open examples/03-agent-loop &rarr;</a>
+  </div>
+
+  <!-- SAFEGUARDS -->
+  <div class="slide">
+    <div class="kicker">Two safeguards, two failures</div>
+    <h2>Bounding the loop</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">MAX_ITERATIONS</div><div class="layer-desc">A model that never stops asking for tools, until your budget is gone.</div></div>
+      <div class="layer"><div class="layer-label">TOOL_TIMEOUT_MS</div><div class="layer-desc">One hung tool call stalling the whole run, with no output at all.</div></div>
+    </div>
+    <p class="note">Hitting the cap is information: the task was too big, the
+      tools too weak, or the prompt too vague. And a timeout stops the
+      <em>waiting</em>, not the tool &mdash; it may still be running.</p>
+  </div>
+
+  <!-- STATE -->
+  <div class="slide">
+    <div class="kicker">Example 04</div>
+    <h2>History vs. state</h2>
+    <pre>messages   -&gt; sent to the model, every call, always paid for
+AgentState -&gt; never sent, free</pre>
+    <p>Read a 50,000-token file and it's in your context on every subsequent
+      call for the rest of the run.</p>
+    <p class="note">Example 04 truncates tool output at 800 characters and prints
+      what the model never saw. That's the blunt instrument &mdash; session 3
+      replaces it.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/04-state/README.md">Open examples/04-state &rarr;</a>
+  </div>
+
+  <!-- COST -->
+  <div class="slide">
+    <div class="kicker">What it costs</div>
+    <h2>Append-only,<br>for a reason</h2>
+    <pre>12 turns, 2,000-token prompt, +500 tokens a turn
+final context:        7,500 tokens
+total billed:        57,000 tokens   # every call re-sends the past</pre>
+    <p>Cost is closer to quadratic in turns than linear. Example 04 prints the
+      real numbers, from the provider's <code>usage</code> field.</p>
+    <p style="margin-top: 1rem;">Prompt caching is the mitigation: providers cache the
+      <em>prefix</em> and charge a fraction to re-send it. Anthropic marks
+      breakpoints explicitly, Gemini caches implicitly.</p>
+    <div class="quote">Edit an earlier message and you invalidate the cache from
+      there on. That's why compaction is a rare, deliberate event.</div>
+  </div>
+
+  <!-- TWO RETRIES -->
+  <div class="slide">
+    <div class="kicker">More calls, more 429s</div>
+    <h2>Two kinds of retry</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Transport &middot; provider.ts</div><div class="layer-desc">429, 5xx, dropped connection, timeout. The harness decides. Backoff, Retry-After, jitter. <strong>The model never sees it.</strong></div></div>
+      <div class="layer"><div class="layer-label">Semantic &middot; the loop</div><div class="layer-desc">A tool returned <code>{ ok: false }</code>. The model decides: try again, or take another route.</div></div>
+    </div>
+    <p class="note">A rate limit carries nothing the model can act on. A failed
+      tool carries exactly what it needs. Different layers, on purpose.</p>
+  </div>
+
+  <!-- HOMEWORK 2 -->
+  <div class="slide">
+    <div class="kicker">Homework &middot; stage 2</div>
+    <h2>The loop,<br>and your first score</h2>
+    <pre>pnpm golden --runs=3   # 10 fixed questions, averaged</pre>
+    <p>This is your baseline. Print tokens and cost on every run, from
+      <code>usage</code> &mdash; not an estimate.</p>
+    <p class="note">The model isn't deterministic. One run is one sample; compare
+      averages.</p>
+    <p style="margin-top: 1.25rem;"><strong>In your own tool:</strong> do one real
+      task at work, open the transcript, and count loop iterations, tool calls,
+      and tokens. Which calls were reads, which were writes? Bring the numbers.</p>
+  </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<nav class="slide-nav">
+  <button id="prev" aria-label="Previous slide">&larr;</button>
+  <button id="next" aria-label="Next slide">&rarr;</button>
+</nav>
+<div class="slide-counter" id="counter"></div>
+
+<script src="deck.js"></script>
+</body>
+</html>

@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Session 1 · Provider, prompt, tool calling — AI Agents Engineering Workshop</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<a class="home" href="./">&larr; All sessions</a>
+<div class="slides">
+
+  <!-- TITLE -->
+  <div class="slide center active">
+    <div class="kicker">AI Agents Engineering Workshop</div>
+    <h1>Build a runtime,<br>not a <span class="accent">prompt.</span></h1>
+    <p style="margin-top: 1.5rem;">How Claude Code, Codex, opencode and pi actually work &mdash;
+      by building one.</p>
+  </div>
+
+  <!-- AGENDA -->
+  <div class="slide">
+    <div class="kicker">Four sessions</div>
+    <h2>Where we're going</h2>
+    <ul class="agenda">
+      <li><span class="num">1</span><span><span class="title">Foundations</span><span class="desc">Provider, system prompt, tool calling</span></span></li>
+      <li><span class="num">2</span><span><span class="title">The loop</span><span class="desc">Iteration, state, what it costs, and retries</span></span></li>
+      <li><span class="num">3</span><span><span class="title">Tools, writing &amp; context</span><span class="desc">Tool design, the hardest tool, compaction and sessions</span></span></li>
+      <li><span class="num">4</span><span><span class="title">The whole harness</span><span class="desc">Recap, security, protocols, and the homework</span></span></li>
+    </ul>
+  </div>
+
+  <!-- TWO TRACKS -->
+  <div class="slide">
+    <div class="kicker">What we're actually building</div>
+    <h2>Two harnesses,<br>in parallel</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">In session &middot; Engineering Agent</div><div class="layer-desc">Investigates and fixes a bundled Pokédex API with a real failing test. 10 examples.</div></div>
+      <div class="layer"><div class="layer-label">Homework &middot; Wiki Harness</div><div class="layer-desc">Yours. 162 pages of the QuestionPro help centre, offline. One stage at a time.</div></div>
+    </div>
+    <p class="note">You only ever edit <code>harness/</code>. Upstream never touches it,
+      so <code>git pull upstream main</code> never conflicts.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/harness/README.md">Open harness/README.md &rarr;</a>
+  </div>
+
+  <!-- MENTAL MODEL -->
+  <div class="slide center">
+    <div class="kicker">Mental model</div>
+    <h1>Agent &ne; LLM + prompt</h1>
+    <div class="quote">An agent is a runtime that lets a model operate
+      in an environment through controlled actions.</div>
+  </div>
+
+  <!-- SESSION 1 -->
+  <div class="slide center" id="session-1">
+    <div class="kicker">Session 1</div>
+    <h1>Provider, prompt,<br><span class="accent">tool calling</span></h1>
+  </div>
+
+  <!-- THE HOOK -->
+  <div class="slide center">
+    <div class="kicker">You just learned RAG</div>
+    <h1>Claude Code has no<br><span class="accent">vector database.</span></h1>
+    <p style="margin-top: 1.5rem;">Neither does Codex, opencode, or pi. They grep.</p>
+  </div>
+
+  <!-- WHY -->
+  <div class="slide">
+    <div class="kicker">Retrieval, two ways</div>
+    <h2>Why grep wins here</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">An index goes stale</div><div class="layer-desc">Code changes every commit. Grep always reads the current world.</div></div>
+      <div class="layer"><div class="layer-label">Code is exact</div><div class="layer-desc">You want the file containing <code>getPokemonByName</code>, not the one nearest it in embedding space.</div></div>
+      <div class="layer"><div class="layer-label">Top-k guesses too early</div><div class="layer-desc">It decides how much context is relevant before anyone knows the problem.</div></div>
+    </div>
+    <div class="quote">Agentic search is RAG where the model gets to iterate.</div>
+  </div>
+
+  <!-- PROVIDER -->
+  <div class="slide">
+    <div class="kicker">Example 01</div>
+    <h2>The provider</h2>
+    <pre>interface LLMProvider {
+  chat(request): Promise&lt;ChatResponse&gt;
+}</pre>
+    <p>One interface for Gemini, OpenAI, Groq, a local model. The workshop
+      doesn't care which vendor you picked this morning.</p>
+    <div class="quote">The API is stateless. Every call ships the entire history.
+      "Memory" is always something the client does.</div>
+    <pre>LLM_DEBUG=1 pnpm 02   # every request and response body, on screen</pre>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/01-basic-llm/README.md">Open examples/01-basic-llm &rarr;</a>
+  </div>
+
+  <!-- SYSTEM PROMPT -->
+  <div class="slide">
+    <div class="kicker">The underrated part</div>
+    <h2>The system prompt<br>is the product</h2>
+    <p>In a real harness it isn't a sentence, it's thousands of tokens. The
+      workflow, the refusals, when to use which tool &mdash; that's prompt, not code.</p>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Priority</div><div class="layer-desc">Models treat it as highest-priority. A tendency, not a guarantee &mdash; session 4 shows where it gives out.</div></div>
+      <div class="layer"><div class="layer-label">Tool descriptions count</div><div class="layer-desc">Read by the model on every call. Prompt engineering wearing a JSON hat.</div></div>
+      <div class="layer"><div class="layer-label">It costs, repeatedly</div><div class="layer-desc">Re-sent on every turn of the loop. A 20-turn run pays for it 20 times.</div></div>
+    </div>
+  </div>
+
+  <!-- TOOL CALLING -->
+  <div class="slide">
+    <div class="kicker">Example 02</div>
+    <h2>Tool calling</h2>
+    <pre>{
+  "name": "search_code",
+  "arguments": { "query": "TODO" }
+}</pre>
+    <div class="quote">The model does not execute the tool. The application executes the tool.</div>
+    <p class="note">It can ask for several calls at once. Every call gets its own
+      result, paired by <code>tool_call_id</code> &mdash; miss one and the provider
+      rejects the next request.</p>
+    <a class="example-link" href="https://github.com/salauddin-sifat-qp/ai-agents-engineering-workshop/blob/main/examples/02-tool-calling/README.md">Open examples/02-tool-calling &rarr;</a>
+  </div>
+
+  <!-- EXECUTION BOUNDARY -->
+  <div class="slide">
+    <div class="kicker">The execution boundary</div>
+    <h2>Model requests.<br>Application decides.</h2>
+    <div class="box">
+      <div class="layer"><div class="layer-label">Model</div><div class="layer-desc">Requests a tool call. Never runs it.</div></div>
+      <div class="layer"><div class="layer-label">Application</div><div class="layer-desc">Validates, classifies, maybe asks a human.</div></div>
+      <div class="layer"><div class="layer-label">Tool</div><div class="layer-desc">Runs. Returns a result.</div></div>
+      <div class="layer"><div class="layer-label">Model</div><div class="layer-desc">Receives the result, decides what's next.</div></div>
+    </div>
+    <p class="note">Every security property in session 4 rests on this one fact.</p>
+  </div>
+
+  <!-- HOMEWORK 1 -->
+  <div class="slide">
+    <div class="kicker">Homework &middot; stage 1</div>
+    <h2>One tool call,<br>end to end</h2>
+    <pre>pnpm verify              # structure, offline and free
+LLM_DEBUG=1 pnpm harness # read what the model actually receives</pre>
+    <p>No score yet: <code>pnpm golden</code> needs the loop you build next.</p>
+    <div class="quote">If you see "rate limited, retrying" &mdash; that's not your bug.
+      Don't work around it. Screenshot it and bring it.</div>
+  </div>
+
+</div>
+
+<div class="progress-bar" id="progress"></div>
+<nav class="slide-nav">
+  <button id="prev" aria-label="Previous slide">&larr;</button>
+  <button id="next" aria-label="Next slide">&rarr;</button>
+</nav>
+<div class="slide-counter" id="counter"></div>
+
+<script src="deck.js"></script>
+</body>
+</html>
